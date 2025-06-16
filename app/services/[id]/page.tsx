@@ -6,32 +6,160 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-export default function ServiceDetailPage() {
-  // Mock data for service detail
-  const service = {
-    id: 1,
-    title: "Plomberie",
-    description:
-      "Services de plomberie professionnels pour tous vos besoins : réparations, installations, dépannages d'urgence et maintenance. Nos plombiers certifiés interviennent rapidement avec du matériel de qualité.",
-    image: "/placeholder.svg?height=400&width=600",
-    category: "Maison",
-    features: [
-      "Dépannage 24h/7j disponible",
-      "Devis gratuit et sans engagement",
-      "Garantie sur tous les travaux",
-      "Matériel de qualité professionnelle",
-      "Intervention dans toute la région",
-      "Paiement après service rendu",
-    ],
-    subServices: [
-      "Réparation de fuites",
-      "Installation de robinetterie",
-      "Débouchage de canalisations",
-      "Installation de chauffe-eau",
-      "Rénovation salle de bain",
-      "Dépannage d'urgence",
-    ],
+export default async function ServiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const serviceId = Number.parseInt(id)
+
+  // Mock data for different services
+  const services = {
+    1: {
+      id: 1,
+      title: "Plomberie",
+      description:
+        "Services de plomberie professionnels pour tous vos besoins : réparations, installations, dépannages d'urgence et maintenance. Nos plombiers certifiés interviennent rapidement avec du matériel de qualité.",
+      image: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=600&h=400&fit=crop",
+      category: "Maison",
+      features: [
+        "Dépannage 24h/7j disponible",
+        "Devis gratuit et sans engagement",
+        "Garantie sur tous les travaux",
+        "Matériel de qualité professionnelle",
+        "Intervention dans toute la région",
+        "Paiement après service rendu",
+      ],
+      subServices: [
+        "Réparation de fuites",
+        "Installation de robinetterie",
+        "Débouchage de canalisations",
+        "Installation de chauffe-eau",
+        "Rénovation salle de bain",
+        "Dépannage d'urgence",
+      ],
+    },
+    2: {
+      id: 2,
+      title: "Ménage & Nettoyage",
+      description:
+        "Services de nettoyage professionnel pour votre domicile, bureaux et espaces commerciaux. Nos équipes formées utilisent des produits écologiques et des techniques modernes pour un résultat impeccable.",
+      image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&h=400&fit=crop",
+      category: "Entretien",
+      features: [
+        "Produits écologiques certifiés",
+        "Équipe formée et assurée",
+        "Matériel professionnel fourni",
+        "Horaires flexibles",
+        "Service régulier ou ponctuel",
+        "Satisfaction garantie",
+      ],
+      subServices: [
+        "Ménage régulier",
+        "Grand nettoyage",
+        "Nettoyage après travaux",
+        "Nettoyage de vitres",
+        "Repassage",
+        "Nettoyage de bureaux",
+      ],
+    },
+    3: {
+      id: 3,
+      title: "Électricité",
+      description:
+        "Installation électrique, dépannage et mise aux normes par des électriciens certifiés. Nous intervenons pour tous vos besoins électriques en respectant les normes de sécurité en vigueur.",
+      image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&h=400&fit=crop",
+      category: "Maison",
+      features: [
+        "Électriciens certifiés",
+        "Mise aux normes électriques",
+        "Intervention rapide",
+        "Diagnostic gratuit",
+        "Matériel aux normes",
+        "Garantie décennale",
+      ],
+      subServices: [
+        "Installation électrique",
+        "Dépannage électrique",
+        "Mise aux normes",
+        "Installation éclairage",
+        "Tableau électrique",
+        "Prise et interrupteur",
+      ],
+    },
+    4: {
+      id: 4,
+      title: "Jardinage & Paysagisme",
+      description:
+        "Entretien de jardins, taille, plantation et création d'espaces verts sur mesure. Nos jardiniers expérimentés transforment et entretiennent vos espaces extérieurs avec passion.",
+      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop",
+      category: "Extérieur",
+      features: [
+        "Conseil personnalisé",
+        "Plantes locales adaptées",
+        "Entretien régulier",
+        "Création d'espaces verts",
+        "Taille professionnelle",
+        "Respect de l'environnement",
+      ],
+      subServices: [
+        "Tonte de pelouse",
+        "Taille d'arbres",
+        "Plantation",
+        "Arrosage automatique",
+        "Création de jardins",
+        "Entretien espaces verts",
+      ],
+    },
+    5: {
+      id: 5,
+      title: "Cuisine à Domicile",
+      description:
+        "Chefs professionnels pour vos repas quotidiens, événements et occasions spéciales. Découvrez la cuisine sénégalaise authentique et internationale préparée chez vous.",
+      image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=400&fit=crop",
+      category: "Culinaire",
+      features: [
+        "Chefs expérimentés",
+        "Cuisine locale et internationale",
+        "Menu personnalisé",
+        "Ingrédients frais",
+        "Service à domicile",
+        "Événements spéciaux",
+      ],
+      subServices: [
+        "Repas quotidiens",
+        "Cuisine sénégalaise",
+        "Événements privés",
+        "Cours de cuisine",
+        "Pâtisserie",
+        "Buffets",
+      ],
+    },
+    6: {
+      id: 6,
+      title: "Bricolage & Réparations",
+      description:
+        "Petits travaux, montage de meubles, réparations diverses et aménagements. Nos bricoleurs polyvalents s'occupent de tous vos petits travaux avec précision et efficacité.",
+      image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&h=400&fit=crop",
+      category: "Maison",
+      features: [
+        "Multi-compétences",
+        "Outils professionnels fournis",
+        "Travail soigné",
+        "Devis transparent",
+        "Intervention rapide",
+        "Petits et gros travaux",
+      ],
+      subServices: [
+        "Montage de meubles",
+        "Réparations diverses",
+        "Peinture",
+        "Pose de étagères",
+        "Petite maçonnerie",
+        "Aménagement intérieur",
+      ],
+    },
   }
+
+  // Get the service or default to plomberie
+  const service = services[serviceId as keyof typeof services] || services[1]
 
   // Mock data for providers
   const providers = [
@@ -318,8 +446,8 @@ export default function ServiceDetailPage() {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Button className="bg-white text-green-500 hover:bg-green-50">Demander conseil</Button>
-              <Button variant="outline" className="text-white border-white hover:bg-green-600">
+              <Button className="bg-green-500 text-white hover:bg-green-600">Demander conseil</Button>
+              <Button variant="outline" className="bg-white text-green-500 border-green-500 hover:bg-green-50">
                 Appeler maintenant
               </Button>
             </div>

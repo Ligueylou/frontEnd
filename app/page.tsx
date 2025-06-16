@@ -98,52 +98,16 @@ export default function HomePage() {
           </div>
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
             {[
-              {
-                icon: "🔧",
-                title: "Plomberie",
-                description: "Réparation et installation de systèmes de plomberie",
-                image: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=300&h=200&fit=crop",
-              },
-              {
-                icon: "⚡",
-                title: "Électricité",
-                description: "Installation et dépannage électrique",
-                image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&h=200&fit=crop",
-              },
-              {
-                icon: "🧹",
-                title: "Ménage",
-                description: "Services de nettoyage professionnel",
-                image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop",
-              },
-              {
-                icon: "🔨",
-                title: "Bricolage",
-                description: "Petits travaux et réparations diverses",
-                image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=300&h=200&fit=crop",
-              },
-              {
-                icon: "🌱",
-                title: "Jardinage",
-                description: "Entretien et aménagement d'espaces verts",
-                image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=200&fit=crop",
-              },
-              {
-                icon: "👨‍🍳",
-                title: "Cuisine",
-                description: "Préparation de repas à domicile",
-                image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300&h=200&fit=crop",
-              },
+              { icon: "🔧", title: "Plomberie", description: "Réparation et installation de systèmes de plomberie" },
+              { icon: "⚡", title: "Électricité", description: "Installation et dépannage électrique" },
+              { icon: "🧹", title: "Ménage", description: "Services de nettoyage professionnel" },
+              { icon: "🔨", title: "Bricolage", description: "Petits travaux et réparations diverses" },
+              { icon: "🌱", title: "Jardinage", description: "Entretien et aménagement d'espaces verts" },
+              { icon: "👨‍🍳", title: "Cuisine", description: "Préparation de repas à domicile" },
             ].map((service, index) => (
               <Card key={index} className="transition-all hover:shadow-lg">
                 <CardContent className="p-6 flex flex-col items-center text-center">
-                  <div className="w-full h-32 mb-4 rounded-lg overflow-hidden">
-                    <img
-                      src={service.image || "/placeholder.svg"}
-                      alt={service.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                  <div className="text-4xl mb-4">{service.icon}</div>
                   <h3 className="text-xl font-bold mb-2">{service.title}</h3>
                   <p className="text-muted-foreground">{service.description}</p>
                 </CardContent>
@@ -287,10 +251,10 @@ export default function HomePage() {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Button className="bg-white text-green-500 hover:bg-green-50" asChild>
+              <Button className="bg-green-500 text-white hover:bg-green-600" asChild>
                 <Link href="/services">Trouver un service</Link>
               </Button>
-              <Button variant="outline" className="text-white border-white hover:bg-green-600" asChild>
+              <Button variant="outline" className="bg-white text-green-500 border-green-500 hover:bg-green-50" asChild>
                 <Link href="/register">Devenir prestataire</Link>
               </Button>
             </div>

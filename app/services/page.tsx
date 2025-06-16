@@ -11,61 +11,67 @@ export default function ServicesPage() {
       id: 1,
       title: "Plomberie",
       description: "Réparations, installations et dépannages d'urgence pour tous vos problèmes de plomberie",
-      image: "/placeholder.svg?height=200&width=300",
+      image: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=300&h=200&fit=crop",
       providersCount: 24,
       category: "Maison",
       popular: true,
       features: ["Dépannage 24h/7j", "Devis gratuit", "Garantie travaux"],
+      icon: "🔧",
     },
     {
       id: 2,
       title: "Ménage & Nettoyage",
       description: "Services de nettoyage professionnel pour votre domicile, bureaux et espaces commerciaux",
-      image: "/placeholder.svg?height=200&width=300",
+      image: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=300&h=200&fit=crop",
       providersCount: 45,
       category: "Entretien",
       popular: true,
       features: ["Produits écologiques", "Équipe formée", "Assurance incluse"],
+      icon: "🧹",
     },
     {
       id: 3,
       title: "Électricité",
       description: "Installation électrique, dépannage et mise aux normes par des électriciens certifiés",
-      image: "/placeholder.svg?height=200&width=300",
+      image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&h=200&fit=crop",
       providersCount: 18,
       category: "Maison",
       popular: false,
       features: ["Électriciens certifiés", "Mise aux normes", "Intervention rapide"],
+      icon: "⚡",
     },
     {
       id: 4,
       title: "Jardinage & Paysagisme",
       description: "Entretien de jardins, taille, plantation et création d'espaces verts sur mesure",
-      image: "/placeholder.svg?height=200&width=300",
+      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300&h=200&fit=crop",
       providersCount: 16,
       category: "Extérieur",
       popular: false,
       features: ["Conseil personnalisé", "Plantes locales", "Entretien régulier"],
+      icon: "🌱",
     },
     {
       id: 5,
       title: "Cuisine à Domicile",
       description: "Chefs professionnels pour vos repas quotidiens, événements et occasions spéciales",
-      image: "/placeholder.svg?height=200&width=300",
+      image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300&h=200&fit=crop",
       providersCount: 12,
       category: "Culinaire",
       popular: true,
       features: ["Chefs expérimentés", "Cuisine locale", "Menu personnalisé"],
+      icon: "👨‍🍳",
     },
     {
       id: 6,
       title: "Bricolage & Réparations",
       description: "Petits travaux, montage de meubles, réparations diverses et aménagements",
-      image: "/placeholder.svg?height=200&width=300",
+      image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=300&h=200&fit=crop",
       providersCount: 32,
       category: "Maison",
       popular: false,
       features: ["Multi-compétences", "Outils fournis", "Travail soigné"],
+      icon: "🔨",
     },
   ]
 
@@ -173,6 +179,11 @@ export default function ServicesPage() {
                       <span className="text-sm font-medium">{service.providersCount}</span>
                     </div>
                   </div>
+                  <div className="absolute bottom-4 left-4">
+                    <div className="bg-white/90 rounded-full w-12 h-12 flex items-center justify-center text-2xl">
+                      {service.icon}
+                    </div>
+                  </div>
                 </div>
 
                 <CardContent className="p-6">
@@ -225,8 +236,8 @@ export default function ServicesPage() {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Button className="bg-white text-green-500 hover:bg-green-50">Demande personnalisée</Button>
-              <Button variant="outline" className="text-white border-white hover:bg-green-600">
+              <Button className="bg-green-500 text-white hover:bg-green-600">Demande personnalisée</Button>
+              <Button variant="outline" className="bg-white text-green-500 border-green-500 hover:bg-green-50">
                 Devenir prestataire
               </Button>
             </div>

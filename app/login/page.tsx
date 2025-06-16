@@ -1,13 +1,53 @@
+"use client"
+
+import type React from "react"
+
 import Link from "next/link"
-import { Shield } from "lucide-react"
+import { Shield, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from "../contexts/auth-context"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export default function LoginPage() {
+  const { login } = useAuth()
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    phone: "",
+    remember: false,
+  })
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      await login(formData.email, formData.password)
+      toast.success("Connexion réussie !")
+      // Redirection automatique gérée par le contexte d'authentification
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erreur de connexion")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePhoneLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    // Implement phone login logic here
+    toast.info("Connexion par téléphone non implémentée")
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
@@ -36,7 +76,7 @@ export default function LoginPage() {
                   <TabsTrigger value="phone">Téléphone</TabsTrigger>
                 </TabsList>
                 <TabsContent value="email">
-                  <form>
+                  <form onSubmit={handleEmailLogin}>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
@@ -45,7 +85,10 @@ export default function LoginPage() {
                           placeholder="exemple@email.com"
                           type="email"
                           required
+                          value={formData.email}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
                           className="border-green-200 focus:border-green-500"
+                          disabled={loading}
                         />
                       </div>
                       <div className="space-y-2">
@@ -55,15 +98,33 @@ export default function LoginPage() {
                             Mot de passe oublié?
                           </Link>
                         </div>
-                        <Input
-                          id="password"
-                          type="password"
-                          required
-                          className="border-green-200 focus:border-green-500"
-                        />
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            required
+                            value={formData.password}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
+                            className="border-green-200 focus:border-green-500 pr-10"
+                            disabled={loading}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Checkbox id="remember" />
+                        <Checkbox
+                          id="remember"
+                          checked={formData.remember}
+                          onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, remember: !!checked }))}
+                        />
                         <Label
                           htmlFor="remember"
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -71,14 +132,14 @@ export default function LoginPage() {
                           Se souvenir de moi
                         </Label>
                       </div>
-                      <Button type="submit" className="w-full bg-green-500 hover:bg-green-600">
-                        Se connecter
+                      <Button type="submit" className="w-full bg-green-500 hover:bg-green-600" disabled={loading}>
+                        {loading ? "Connexion..." : "Se connecter"}
                       </Button>
                     </div>
                   </form>
                 </TabsContent>
                 <TabsContent value="phone">
-                  <form>
+                  <form onSubmit={handlePhoneLogin}>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="phone">Numéro de téléphone</Label>
@@ -87,11 +148,14 @@ export default function LoginPage() {
                           placeholder="77 123 45 67"
                           type="tel"
                           required
+                          value={formData.phone}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
                           className="border-green-200 focus:border-green-500"
+                          disabled={loading}
                         />
                       </div>
-                      <Button type="submit" className="w-full bg-green-500 hover:bg-green-600">
-                        Recevoir un code
+                      <Button type="submit" className="w-full bg-green-500 hover:bg-green-600" disabled={loading}>
+                        {loading ? "Envoi..." : "Recevoir un code"}
                       </Button>
                     </div>
                   </form>
@@ -108,7 +172,7 @@ export default function LoginPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" disabled={loading}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"
@@ -125,7 +189,7 @@ export default function LoginPage() {
                   </svg>
                   Facebook
                 </Button>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" disabled={loading}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="24"

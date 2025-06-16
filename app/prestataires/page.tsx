@@ -416,8 +416,8 @@ export default function ProvidersPage() {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Button className="bg-white text-green-500 hover:bg-green-50">Devenir prestataire</Button>
-              <Button variant="outline" className="text-white border-white hover:bg-green-600">
+              <Button className="bg-green-500 text-white hover:bg-green-600">Devenir prestataire</Button>
+              <Button variant="outline" className="bg-white text-green-500 border-green-500 hover:bg-green-50">
                 En savoir plus
               </Button>
             </div>

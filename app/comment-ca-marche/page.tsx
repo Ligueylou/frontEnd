@@ -97,10 +97,14 @@ export default function HowItWorksPage() {
               <div className="flex justify-center">
                 <div className="relative w-full max-w-[500px] h-[300px] bg-gray-100 rounded-xl overflow-hidden">
                   <img
-                    alt="Recherche de services"
+                    alt="Recherche de services au Sénégal"
                     className="object-cover w-full h-full"
-                    src="/placeholder.svg?height=300&width=500"
+                    src="https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=500&h=300&fit=crop"
                   />
+                  <div className="absolute inset-0 bg-black/10"></div>
+                  <div className="absolute top-4 left-4 bg-white/90 rounded-full w-12 h-12 flex items-center justify-center text-2xl">
+                    🔍
+                  </div>
                 </div>
               </div>
             </div>
@@ -110,10 +114,14 @@ export default function HowItWorksPage() {
               <div className="flex justify-center order-last lg:order-first">
                 <div className="relative w-full max-w-[500px] h-[300px] bg-gray-100 rounded-xl overflow-hidden">
                   <img
-                    alt="Comparaison de prestataires"
+                    alt="Comparaison de prestataires sénégalais"
                     className="object-cover w-full h-full"
-                    src="/placeholder.svg?height=300&width=500"
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=300&fit=crop&crop=face"
                   />
+                  <div className="absolute inset-0 bg-black/10"></div>
+                  <div className="absolute top-4 right-4 bg-white/90 rounded-full w-12 h-12 flex items-center justify-center text-2xl">
+                    ⭐
+                  </div>
                 </div>
               </div>
               <div className="flex flex-col justify-center space-y-4">
@@ -175,10 +183,14 @@ export default function HowItWorksPage() {
               <div className="flex justify-center">
                 <div className="relative w-full max-w-[500px] h-[300px] bg-gray-100 rounded-xl overflow-hidden">
                   <img
-                    alt="Réservation et paiement"
+                    alt="Réservation et paiement sécurisé"
                     className="object-cover w-full h-full"
-                    src="/placeholder.svg?height=300&width=500"
+                    src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=500&h=300&fit=crop"
                   />
+                  <div className="absolute inset-0 bg-black/10"></div>
+                  <div className="absolute bottom-4 left-4 bg-white/90 rounded-full w-12 h-12 flex items-center justify-center text-2xl">
+                    💳
+                  </div>
                 </div>
               </div>
             </div>
@@ -188,10 +200,14 @@ export default function HowItWorksPage() {
               <div className="flex justify-center order-last lg:order-first">
                 <div className="relative w-full max-w-[500px] h-[300px] bg-gray-100 rounded-xl overflow-hidden">
                   <img
-                    alt="Service et évaluation"
+                    alt="Service et évaluation au Sénégal"
                     className="object-cover w-full h-full"
-                    src="/placeholder.svg?height=300&width=500"
+                    src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500&h=300&fit=crop"
                   />
+                  <div className="absolute inset-0 bg-black/10"></div>
+                  <div className="absolute top-4 left-4 bg-white/90 rounded-full w-12 h-12 flex items-center justify-center text-2xl">
+                    👍
+                  </div>
                 </div>
               </div>
               <div className="flex flex-col justify-center space-y-4">
@@ -241,40 +257,49 @@ export default function HowItWorksPage() {
             {[
               {
                 icon: <CheckCircle className="h-10 w-10 text-green-500" />,
+                emoji: "✅",
                 title: "Prestataires vérifiés",
                 description:
                   "Tous nos prestataires sont soigneusement vérifiés et doivent respecter nos normes de qualité.",
               },
               {
                 icon: <CreditCard className="h-10 w-10 text-green-500" />,
+                emoji: "💳",
                 title: "Tarifs transparents",
                 description: "Les tarifs sont clairement affichés pour chaque service, sans frais cachés ni surprises.",
               },
               {
                 icon: <Clock className="h-10 w-10 text-green-500" />,
+                emoji: "⏰",
                 title: "Gain de temps",
                 description: "Trouvez rapidement le prestataire idéal sans passer des heures à chercher et à comparer.",
               },
               {
                 icon: <Star className="h-10 w-10 text-green-500" />,
+                emoji: "⭐",
                 title: "Service de qualité",
                 description:
                   "Notre système d'évaluation garantit que vous recevez toujours un service de haute qualité.",
               },
               {
                 icon: <MessageCircle className="h-10 w-10 text-green-500" />,
+                emoji: "💬",
                 title: "Communication facile",
                 description: "Communiquez directement avec les prestataires pour discuter de vos besoins spécifiques.",
               },
               {
                 icon: <Users className="h-10 w-10 text-green-500" />,
+                emoji: "👥",
                 title: "Communauté active",
                 description: "Rejoignez une communauté grandissante d'utilisateurs et de prestataires de services.",
               },
             ].map((benefit, index) => (
               <Card key={index} className="transition-all hover:shadow-lg">
                 <CardContent className="p-6 flex flex-col items-center text-center">
-                  <div className="mb-4 rounded-full bg-green-100 p-4">{benefit.icon}</div>
+                  <div className="mb-4 rounded-full bg-green-100 p-4 relative">
+                    {benefit.icon}
+                    <div className="absolute -top-2 -right-2 text-2xl">{benefit.emoji}</div>
+                  </div>
                   <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
                   <p className="text-muted-foreground">{benefit.description}</p>
                 </CardContent>
@@ -356,7 +381,7 @@ export default function HowItWorksPage() {
                   date: "Il y a 2 jours",
                   comment:
                     "Excellente plateforme ! J'ai trouvé un plombier très compétent en quelques minutes. Le processus est simple et les prestataires sont vraiment professionnels.",
-                  avatar: "/placeholder.svg?height=40&width=40",
+                  avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
                 },
                 {
                   name: "Moussa Sarr",
@@ -364,7 +389,7 @@ export default function HowItWorksPage() {
                   date: "Il y a 1 semaine",
                   comment:
                     "Très pratique pour trouver des services à domicile. L'interface est intuitive et les avis des autres utilisateurs m'ont aidé à faire le bon choix.",
-                  avatar: "/placeholder.svg?height=40&width=40",
+                  avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
                 },
                 {
                   name: "Khadija Ndiaye",
@@ -372,7 +397,7 @@ export default function HowItWorksPage() {
                   date: "Il y a 2 semaines",
                   comment:
                     "Je recommande LIGUEYLU ! Grâce à cette plateforme, j'ai pu trouver une femme de ménage de confiance. Le système de vérification des prestataires est rassurant.",
-                  avatar: "/placeholder.svg?height=40&width=40",
+                  avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
                 },
               ].map((review, index) => (
                 <Card key={index} className="p-4">
@@ -496,10 +521,10 @@ export default function HowItWorksPage() {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Button className="bg-white text-green-500 hover:bg-green-50" asChild>
+              <Button className="bg-green-500 text-white hover:bg-green-600" asChild>
                 <Link href="/services">Trouver un service</Link>
               </Button>
-              <Button variant="outline" className="text-white border-white hover:bg-green-600" asChild>
+              <Button variant="outline" className="bg-white text-green-500 border-green-500 hover:bg-green-50" asChild>
                 <Link href="/register">Devenir prestataire</Link>
               </Button>
             </div>
@@ -611,7 +636,7 @@ export default function HowItWorksPage() {
             <p className="text-gray-400">© 2025 LIGUEYLU. Tous droits réservés.</p>
             <div className="flex space-x-4 mt-4 md:mt-0">
               <Link href="/comment-ca-marche" className="text-gray-400 hover:text-white text-sm">
-                Conditions d&apos;utilisation
+                Conditions d'utilisation
               </Link>
               <Link href="/comment-ca-marche" className="text-gray-400 hover:text-white text-sm">
                 Politique de confidentialité

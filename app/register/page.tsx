@@ -1,13 +1,139 @@
+"use client"
+
+import type React from "react"
+
 import Link from "next/link"
-import { Shield } from "lucide-react"
+import { Shield, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from "../contexts/auth-context"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export default function RegisterPage() {
+  const { register } = useAuth()
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [activeTab, setActiveTab] = useState("client")
+
+  const [clientForm, setClientForm] = useState({
+    nomComplet: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+    acceptTerms: false,
+  })
+
+  const [providerForm, setProviderForm] = useState({
+    nomComplet: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+    acceptTerms: false,
+  })
+
+  const validateForm = (form: typeof clientForm | typeof providerForm) => {
+    if (!form.nomComplet.trim()) {
+      toast.error("Veuillez entrer votre nom complet")
+      return false
+    }
+
+    if (!form.email.includes("@")) {
+      toast.error("Veuillez entrer un email valide")
+      return false
+    }
+
+    if (!form.phone.trim()) {
+      toast.error("Veuillez entrer votre numéro de téléphone")
+      return false
+    }
+
+    // Validation du téléphone selon le pattern du backend (7-9 chiffres)
+    const phonePattern = /^\d{7,9}$/
+    if (!phonePattern.test(form.phone.replace(/\s/g, ""))) {
+      toast.error("Le numéro de téléphone doit contenir entre 7 et 9 chiffres")
+      return false
+    }
+
+    // Validation du mot de passe selon le pattern du backend (alphanumérique, 8-20 caractères)
+    const passwordPattern = /^[a-zA-Z0-9]{8,20}$/
+    if (!passwordPattern.test(form.password)) {
+      toast.error("Le mot de passe doit être alphanumérique, entre 8 et 20 caractères")
+      return false
+    }
+
+    if (form.password !== form.confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas")
+      return false
+    }
+
+    if (!form.acceptTerms) {
+      toast.error("Vous devez accepter les conditions d'utilisation")
+      return false
+    }
+
+    return true
+  }
+
+  const handleClientSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!validateForm(clientForm)) return
+
+    setLoading(true)
+
+    try {
+      await register({
+        nomComplet: clientForm.nomComplet,
+        email: clientForm.email,
+        password: clientForm.password,
+        telephone: clientForm.phone.replace(/\s/g, ""), // Enlever les espaces
+        role: "CLIENT",
+      })
+
+      toast.success("Inscription réussie !")
+      router.push("/dashboard/client")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de l'inscription")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleProviderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!validateForm(providerForm)) return
+
+    setLoading(true)
+
+    try {
+      await register({
+        nomComplet: providerForm.nomComplet,
+        email: providerForm.email,
+        password: providerForm.password,
+        telephone: providerForm.phone.replace(/\s/g, ""), // Enlever les espaces
+        role: "PRESTATAIRE",
+      })
+
+      toast.success("Inscription réussie ! Votre compte sera activé après validation.")
+      router.push("/dashboard/prestataire")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de l'inscription")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
@@ -28,33 +154,26 @@ export default function RegisterPage() {
               <CardDescription>Inscrivez-vous pour accéder à tous les services de LIGUEYLU</CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="client" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="client">Client</TabsTrigger>
                   <TabsTrigger value="provider">Prestataire</TabsTrigger>
                 </TabsList>
+
                 <TabsContent value="client">
-                  <form>
+                  <form onSubmit={handleClientSubmit}>
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="first-name">Prénom</Label>
-                          <Input
-                            id="first-name"
-                            placeholder="Prénom"
-                            required
-                            className="border-green-200 focus:border-green-500"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="last-name">Nom</Label>
-                          <Input
-                            id="last-name"
-                            placeholder="Nom"
-                            required
-                            className="border-green-200 focus:border-green-500"
-                          />
-                        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="nom-complet">Nom complet</Label>
+                        <Input
+                          id="nom-complet"
+                          placeholder="Prénom Nom"
+                          required
+                          value={clientForm.nomComplet}
+                          onChange={(e) => setClientForm((prev) => ({ ...prev, nomComplet: e.target.value }))}
+                          className="border-green-200 focus:border-green-500"
+                          disabled={loading}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
@@ -63,39 +182,80 @@ export default function RegisterPage() {
                           placeholder="exemple@email.com"
                           type="email"
                           required
+                          value={clientForm.email}
+                          onChange={(e) => setClientForm((prev) => ({ ...prev, email: e.target.value }))}
                           className="border-green-200 focus:border-green-500"
+                          disabled={loading}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="phone">Téléphone</Label>
                         <Input
                           id="phone"
-                          placeholder="77 123 45 67"
+                          placeholder="77123456"
                           type="tel"
                           required
+                          value={clientForm.phone}
+                          onChange={(e) => setClientForm((prev) => ({ ...prev, phone: e.target.value }))}
                           className="border-green-200 focus:border-green-500"
+                          disabled={loading}
                         />
+                        <p className="text-xs text-gray-500">Entre 7 et 9 chiffres</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="password">Mot de passe</Label>
-                        <Input
-                          id="password"
-                          type="password"
-                          required
-                          className="border-green-200 focus:border-green-500"
-                        />
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            required
+                            value={clientForm.password}
+                            onChange={(e) => setClientForm((prev) => ({ ...prev, password: e.target.value }))}
+                            className="border-green-200 focus:border-green-500 pr-10"
+                            disabled={loading}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-gray-500">Alphanumérique, 8-20 caractères</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
-                        <Input
-                          id="confirm-password"
-                          type="password"
-                          required
-                          className="border-green-200 focus:border-green-500"
-                        />
+                        <div className="relative">
+                          <Input
+                            id="confirm-password"
+                            type={showConfirmPassword ? "text" : "password"}
+                            required
+                            value={clientForm.confirmPassword}
+                            onChange={(e) => setClientForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                            className="border-green-200 focus:border-green-500 pr-10"
+                            disabled={loading}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Checkbox id="terms" required />
+                        <Checkbox
+                          id="terms"
+                          required
+                          checked={clientForm.acceptTerms}
+                          onCheckedChange={(checked) => setClientForm((prev) => ({ ...prev, acceptTerms: !!checked }))}
+                        />
                         <Label
                           htmlFor="terms"
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -110,34 +270,27 @@ export default function RegisterPage() {
                           </Link>
                         </Label>
                       </div>
-                      <Button type="submit" className="w-full bg-green-500 hover:bg-green-600">
-                        S&apos;inscrire
+                      <Button type="submit" className="w-full bg-green-500 hover:bg-green-600" disabled={loading}>
+                        {loading ? "Inscription..." : "S'inscrire"}
                       </Button>
                     </div>
                   </form>
                 </TabsContent>
+
                 <TabsContent value="provider">
-                  <form>
+                  <form onSubmit={handleProviderSubmit}>
                     <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="provider-first-name">Prénom</Label>
-                          <Input
-                            id="provider-first-name"
-                            placeholder="Prénom"
-                            required
-                            className="border-green-200 focus:border-green-500"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="provider-last-name">Nom</Label>
-                          <Input
-                            id="provider-last-name"
-                            placeholder="Nom"
-                            required
-                            className="border-green-200 focus:border-green-500"
-                          />
-                        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="provider-nom-complet">Nom complet</Label>
+                        <Input
+                          id="provider-nom-complet"
+                          placeholder="Prénom Nom"
+                          required
+                          value={providerForm.nomComplet}
+                          onChange={(e) => setProviderForm((prev) => ({ ...prev, nomComplet: e.target.value }))}
+                          className="border-green-200 focus:border-green-500"
+                          disabled={loading}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="provider-email">Email</Label>
@@ -146,55 +299,88 @@ export default function RegisterPage() {
                           placeholder="exemple@email.com"
                           type="email"
                           required
+                          value={providerForm.email}
+                          onChange={(e) => setProviderForm((prev) => ({ ...prev, email: e.target.value }))}
                           className="border-green-200 focus:border-green-500"
+                          disabled={loading}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="provider-phone">Téléphone</Label>
                         <Input
                           id="provider-phone"
-                          placeholder="77 123 45 67"
+                          placeholder="77123456"
                           type="tel"
                           required
+                          value={providerForm.phone}
+                          onChange={(e) => setProviderForm((prev) => ({ ...prev, phone: e.target.value }))}
                           className="border-green-200 focus:border-green-500"
+                          disabled={loading}
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="service-type">Type de service</Label>
-                        <select
-                          id="service-type"
-                          className="w-full p-2 border rounded-md border-green-200 focus:border-green-500"
-                          required
-                        >
-                          <option value="">Sélectionnez un service</option>
-                          <option value="plumbing">Plomberie</option>
-                          <option value="electricity">Électricité</option>
-                          <option value="cleaning">Ménage</option>
-                          <option value="handyman">Bricolage</option>
-                          <option value="gardening">Jardinage</option>
-                          <option value="cooking">Cuisine</option>
-                        </select>
+                        <p className="text-xs text-gray-500">Entre 7 et 9 chiffres</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="provider-password">Mot de passe</Label>
-                        <Input
-                          id="provider-password"
-                          type="password"
-                          required
-                          className="border-green-200 focus:border-green-500"
-                        />
+                        <div className="relative">
+                          <Input
+                            id="provider-password"
+                            type={showPassword ? "text" : "password"}
+                            required
+                            value={providerForm.password}
+                            onChange={(e) => setProviderForm((prev) => ({ ...prev, password: e.target.value }))}
+                            className="border-green-200 focus:border-green-500 pr-10"
+                            disabled={loading}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-gray-500">Alphanumérique, 8-20 caractères</p>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="provider-confirm-password">Confirmer le mot de passe</Label>
-                        <Input
-                          id="provider-confirm-password"
-                          type="password"
-                          required
-                          className="border-green-200 focus:border-green-500"
-                        />
+                        <div className="relative">
+                          <Input
+                            id="provider-confirm-password"
+                            type={showConfirmPassword ? "text" : "password"}
+                            required
+                            value={providerForm.confirmPassword}
+                            onChange={(e) => setProviderForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                            className="border-green-200 focus:border-green-500 pr-10"
+                            disabled={loading}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="bg-yellow-50 p-3 rounded-md">
+                        <p className="text-sm text-yellow-800">
+                          <strong>Note:</strong> Votre compte prestataire sera activé après validation par un
+                          administrateur.
+                        </p>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Checkbox id="provider-terms" required />
+                        <Checkbox
+                          id="provider-terms"
+                          required
+                          checked={providerForm.acceptTerms}
+                          onCheckedChange={(checked) =>
+                            setProviderForm((prev) => ({ ...prev, acceptTerms: !!checked }))
+                          }
+                        />
                         <Label
                           htmlFor="provider-terms"
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -209,59 +395,13 @@ export default function RegisterPage() {
                           </Link>
                         </Label>
                       </div>
-                      <Button type="submit" className="w-full bg-green-500 hover:bg-green-600">
-                        S&apos;inscrire comme prestataire
+                      <Button type="submit" className="w-full bg-green-500 hover:bg-green-600" disabled={loading}>
+                        {loading ? "Inscription..." : "S'inscrire comme prestataire"}
                       </Button>
                     </div>
                   </form>
                 </TabsContent>
               </Tabs>
-
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">Ou continuer avec</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" className="w-full">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="mr-2 h-4 w-4"
-                  >
-                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-                  </svg>
-                  Facebook
-                </Button>
-                <Button variant="outline" className="w-full">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="mr-2 h-4 w-4"
-                  >
-                    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
-                  </svg>
-                  Twitter
-                </Button>
-              </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <div className="text-center text-sm">
