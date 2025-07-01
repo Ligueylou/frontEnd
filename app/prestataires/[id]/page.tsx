@@ -1,3 +1,10 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
+import { useAuth } from "../../contexts/auth-context"
+import { apiService, type Prestataire } from "../../lib/api"
+import { toast } from "sonner"
 import Link from "next/link"
 import {
   Shield,
@@ -18,58 +25,162 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function ProviderDetailPage() {
-  // Mock data for a service provider
-  const provider = {
-    id: 1,
-    name: "Amadou Diallo",
-    service: "Plomberie",
-    rating: 4.8,
-    reviews: [
-      {
-        id: 1,
-        user: "Marie Ndiaye",
-        rating: 5,
-        date: "15 avril 2025",
-        comment:
-          "Excellent travail ! Amadou a réparé ma fuite rapidement et proprement. Je recommande vivement ses services.",
-        userImage: "/placeholder.svg?height=40&width=40",
-      },
-      {
-        id: 2,
-        user: "Ousmane Sow",
-        rating: 4,
-        date: "2 avril 2025",
-        comment: "Bon service, ponctuel et efficace. Prix raisonnable pour le travail effectué.",
-        userImage: "/placeholder.svg?height=40&width=40",
-      },
-      {
-        id: 3,
-        user: "Fatou Diop",
-        rating: 5,
-        date: "28 mars 2025",
-        comment:
-          "Amadou a installé toute la plomberie de ma nouvelle cuisine. Travail impeccable et conseils très utiles.",
-        userImage: "/placeholder.svg?height=40&width=40",
-      },
-    ],
-    price: "5 000 FCFA / heure",
-    image: "/placeholder.svg?height=150&width=150",
-    location: "Dakar, Sénégal",
-    available: "Aujourd'hui",
-    verified: true,
-    memberSince: "Janvier 2023",
-    completedJobs: 124,
-    description:
-      "Plombier professionnel avec plus de 10 ans d'expérience. Spécialisé dans les réparations, installations et dépannages d'urgence. Je travaille avec précision et propreté pour garantir votre satisfaction.",
-    skills: [
-      "Installation de plomberie",
-      "Réparation de fuites",
-      "Débouchage",
-      "Chauffe-eau",
-      "Robinetterie",
-      "Dépannage d'urgence",
-    ],
-    certifications: ["Certification Professionnelle en Plomberie", "Formation Sécurité et Hygiène"],
+  const params = useParams()
+  const { user } = useAuth()
+  const [provider, setProvider] = useState<Prestataire | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [reservationLoading, setReservationLoading] = useState(false)
+  const [ratingLoading, setRatingLoading] = useState(false)
+  const [userRating, setUserRating] = useState(0)
+  const [hoverRating, setHoverRating] = useState(0)
+  const [reservationData, setReservationData] = useState({
+    date: "",
+    heure: "",
+    typeService: "",
+    description: ""
+  })
+
+  useEffect(() => {
+    const fetchProvider = async () => {
+      if (!params.id) return
+      
+      setLoading(true)
+      try {
+        const response = await apiService.getPrestataireById(Number(params.id))
+        if (response.success) {
+          setProvider(response.data)
+        } else {
+          toast.error("Erreur lors du chargement du prestataire")
+        }
+      } catch (error) {
+        console.error("Erreur:", error)
+        toast.error("Erreur lors du chargement du prestataire")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProvider()
+  }, [params.id])
+
+  const handleRating = async (rating: number) => {
+    if (!user) {
+      toast.error("Vous devez être connecté pour noter un prestataire")
+      return
+    }
+
+    if (!provider) {
+      toast.error("Prestataire non trouvé")
+      return
+    }
+
+    setRatingLoading(true)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/prestataires/score/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          prestataireId: provider.id,
+          newScore: rating
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        toast.success("Note envoyée avec succès !")
+        setUserRating(rating)
+        // Recharger les données du prestataire pour mettre à jour le score affiché
+        const providerResponse = await apiService.getPrestataireById(Number(params.id))
+        if (providerResponse.success) {
+          setProvider(providerResponse.data)
+        }
+      } else {
+        toast.error(data.message || "Erreur lors de l'envoi de la note")
+      }
+    } catch (error) {
+      console.error("Erreur:", error)
+      toast.error("Erreur lors de l'envoi de la note")
+    } finally {
+      setRatingLoading(false)
+    }
+  }
+
+  const handleReservation = async () => {
+    if (!user) {
+      toast.error("Vous devez être connecté pour faire une réservation")
+      return
+    }
+
+    if (!provider) {
+      toast.error("Prestataire non trouvé")
+      return
+    }
+
+    if (!reservationData.date || !reservationData.heure || !reservationData.typeService) {
+      toast.error("Veuillez remplir tous les champs obligatoires")
+      return
+    }
+
+    setReservationLoading(true)
+    try {
+      const reservationPayload = {
+        prestataireId: provider.id,
+        reservation: {
+          libelle: `Réservation - ${reservationData.typeService}`,
+          typeService: reservationData.typeService,
+          description: reservationData.description || `Réservation pour le ${reservationData.date} à ${reservationData.heure}`,
+          status: "EN_ATTENTE"
+        }
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1"}/prestataires/reservation/add/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify(reservationPayload)
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        toast.success("Réservation créée avec succès !")
+        setReservationData({
+          date: "",
+          heure: "",
+          typeService: "",
+          description: ""
+        })
+      } else {
+        toast.error(data.message || "Erreur lors de la création de la réservation")
+      }
+    } catch (error) {
+      console.error("Erreur:", error)
+      toast.error("Erreur lors de la création de la réservation")
+    } finally {
+      setReservationLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <span>Chargement du prestataire...</span>
+      </div>
+    )
+  }
+
+  if (!provider) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <span>Prestataire non trouvé</span>
+      </div>
+    )
   }
 
   return (
@@ -116,25 +227,20 @@ export default function ProviderDetailPage() {
               <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
                 <div className="relative">
                   <Avatar className="h-32 w-32 border-4 border-green-100">
-                    <AvatarImage src={provider.image || "/placeholder.svg"} alt={provider.name} />
+                    <AvatarImage src="/placeholder.svg" alt={provider.nomComplet} />
                     <AvatarFallback className="text-2xl">
-                      {provider.name
+                      {provider.nomComplet
                         .split(" ")
-                        .map((n) => n[0])
+                        .map((n: string) => n[0])
                         .join("")}
                     </AvatarFallback>
                   </Avatar>
-                  {provider.verified && (
-                    <div className="absolute -bottom-2 -right-2 bg-green-500 text-white p-1 rounded-full">
-                      <CheckCircle className="h-5 w-5" />
-                    </div>
-                  )}
                 </div>
                 <div className="flex-1">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                     <div>
-                      <h1 className="text-2xl font-bold">{provider.name}</h1>
-                      <p className="text-muted-foreground">{provider.service}</p>
+                      <h1 className="text-2xl font-bold">{provider.nomComplet}</h1>
+                      <p className="text-muted-foreground">{provider.specialites?.[0]?.nom || "Prestataire"}</p>
                     </div>
                     <Badge className="bg-green-500 hover:bg-green-600 w-fit">Vérifié</Badge>
                   </div>
@@ -145,29 +251,29 @@ export default function ProviderDetailPage() {
                         .map((_, i) => (
                           <Star
                             key={i}
-                            className={`h-5 w-5 ${i < Math.floor(provider.rating) ? "fill-green-400 text-green-400" : "text-gray-300"}`}
+                            className={`h-5 w-5 ${i < Math.round(provider.score ?? 0) ? "fill-green-400 text-green-400" : "text-gray-300"}`}
                           />
                         ))}
                     </div>
-                    <span className="ml-2 font-medium">{provider.rating}</span>
-                    <span className="ml-1 text-muted-foreground">({provider.reviews.length} avis)</span>
+                    <span className="ml-2 font-medium">{provider.score ?? "-"}</span>
+                    <span className="ml-1 text-muted-foreground">(Score)</span>
                   </div>
                   <div className="flex flex-wrap gap-4 mt-4">
                     <div className="flex items-center">
                       <MapPin className="h-4 w-4 text-muted-foreground mr-1" />
-                      <span className="text-sm">{provider.location}</span>
+                      <span className="text-sm">{provider.adresse?.ville || "Non spécifié"}</span>
                     </div>
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 text-green-500 mr-1" />
-                      <span className="text-sm text-green-600">Disponible {provider.available.toLowerCase()}</span>
+                      <span className="text-sm text-green-600">Disponible</span>
                     </div>
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 text-muted-foreground mr-1" />
-                      <span className="text-sm">Membre depuis {provider.memberSince}</span>
+                      <span className="text-sm">Membre depuis 2023</span>
                     </div>
                     <div className="flex items-center">
                       <Briefcase className="h-4 w-4 text-muted-foreground mr-1" />
-                      <span className="text-sm">{provider.completedJobs} services réalisés</span>
+                      <span className="text-sm">Prestataire vérifié</span>
                     </div>
                   </div>
                 </div>
@@ -181,192 +287,177 @@ export default function ProviderDetailPage() {
                 <TabsTrigger value="reviews">Avis</TabsTrigger>
               </TabsList>
               <TabsContent value="about" className="bg-white rounded-lg border p-6 mt-2">
-                <h2 className="text-xl font-semibold mb-4">À propos de {provider.name}</h2>
-                <p className="text-muted-foreground mb-6">{provider.description}</p>
+                <h2 className="text-xl font-semibold mb-4">À propos de {provider.nomComplet}</h2>
+                <p className="text-muted-foreground mb-6">Prestataire professionnel qualifié et vérifié.</p>
 
-                <h3 className="text-lg font-semibold mb-3">Compétences</h3>
+                <h3 className="text-lg font-semibold mb-3">Spécialités</h3>
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {provider.skills.map((skill, index) => (
+                  {provider.specialites?.map((specialite, index) => (
                     <Badge key={index} variant="outline" className="bg-green-50">
-                      {skill}
+                      {specialite.nom}
                     </Badge>
-                  ))}
+                  )) || <span className="text-muted-foreground">Aucune spécialité spécifiée</span>}
                 </div>
 
-                <h3 className="text-lg font-semibold mb-3">Certifications</h3>
+                <h3 className="text-lg font-semibold mb-3">Informations</h3>
                 <ul className="space-y-2">
-                  {provider.certifications.map((cert, index) => (
-                    <li key={index} className="flex items-center">
-                      <Award className="h-5 w-5 text-green-500 mr-2" />
-                      <span>{cert}</span>
-                    </li>
-                  ))}
+                  <li className="flex items-center">
+                    <Award className="h-5 w-5 text-green-500 mr-2" />
+                    <span>Prestataire vérifié par LIGUEYLU</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Award className="h-5 w-5 text-green-500 mr-2" />
+                    <span>Score: {provider.score ?? "Non évalué"}</span>
+                  </li>
                 </ul>
               </TabsContent>
               <TabsContent value="services" className="bg-white rounded-lg border p-6 mt-2">
                 <h2 className="text-xl font-semibold mb-4">Services proposés</h2>
-                <div className="grid gap-4">
-                  {[
-                    {
-                      title: "Réparation de fuite",
-                      price: "5 000 FCFA",
-                      duration: "1 heure",
-                      description: "Détection et réparation de fuites d'eau dans les tuyaux, robinets ou toilettes.",
-                    },
-                    {
-                      title: "Installation de robinetterie",
-                      price: "7 500 FCFA",
-                      duration: "1-2 heures",
-                      description: "Installation de nouveaux robinets dans la cuisine ou la salle de bain.",
-                    },
-                    {
-                      title: "Débouchage de canalisation",
-                      price: "6 000 FCFA",
-                      duration: "1 heure",
-                      description: "Débouchage de canalisations bouchées dans la cuisine, salle de bain ou toilettes.",
-                    },
-                    {
-                      title: "Installation de chauffe-eau",
-                      price: "15 000 FCFA",
-                      duration: "3-4 heures",
-                      description: "Installation complète d'un nouveau chauffe-eau, y compris le raccordement.",
-                    },
-                  ].map((service, index) => (
-                    <Card key={index} className="overflow-hidden">
-                      <CardContent className="p-0">
-                        <div className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-bold text-lg">{service.title}</h3>
-                              <p className="text-muted-foreground mt-1">{service.description}</p>
-                              <div className="flex items-center mt-2">
-                                <Clock className="h-4 w-4 text-muted-foreground mr-1" />
-                                <span className="text-sm">{service.duration}</span>
-                              </div>
-                            </div>
-                            <div className="font-bold text-lg">{service.price}</div>
-                          </div>
-                        </div>
-                        <div className="bg-green-50 p-3 text-center">
-                          <Button className="bg-green-500 hover:bg-green-600 w-full">Réserver</Button>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {provider.specialites?.map((specialite, index) => (
+                    <Card key={index}>
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold mb-2">{specialite.nom}</h3>
+                        <p className="text-sm text-muted-foreground">{specialite.description || "Service professionnel"}</p>
                       </CardContent>
                     </Card>
-                  ))}
+                  )) || (
+                    <p className="text-muted-foreground col-span-2">Aucun service spécifié</p>
+                  )}
                 </div>
               </TabsContent>
               <TabsContent value="reviews" className="bg-white rounded-lg border p-6 mt-2">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold">Avis ({provider.reviews.length})</h2>
-                  <div className="flex items-center">
-                    <div className="flex">
-                      {Array(5)
-                        .fill(0)
-                        .map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-5 w-5 ${i < Math.floor(provider.rating) ? "fill-green-400 text-green-400" : "text-gray-300"}`}
-                          />
-                        ))}
-                    </div>
-                    <span className="ml-2 font-medium">{provider.rating}</span>
-                  </div>
+                  <h2 className="text-xl font-semibold">Noter ce prestataire</h2>
                 </div>
-
-                <div className="space-y-6">
-                  {provider.reviews.map((review) => (
-                    <div key={review.id} className="border-b pb-6 last:border-0">
-                      <div className="flex items-start gap-4">
-                        <Avatar>
-                          <AvatarImage src={review.userImage || "/placeholder.svg"} alt={review.user} />
-                          <AvatarFallback>
-                            {review.user
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-semibold">{review.user}</h3>
-                              <div className="flex items-center mt-1">
-                                <div className="flex">
-                                  {Array(5)
-                                    .fill(0)
-                                    .map((_, i) => (
-                                      <Star
-                                        key={i}
-                                        className={`h-4 w-4 ${i < review.rating ? "fill-green-400 text-green-400" : "text-gray-300"}`}
-                                      />
-                                    ))}
-                                </div>
-                                <span className="text-sm text-muted-foreground ml-2">{review.date}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <p className="mt-2">{review.comment}</p>
-                          <div className="flex items-center gap-4 mt-3">
-                            <Button variant="ghost" size="sm" className="h-8 px-2">
-                              <ThumbsUp className="h-4 w-4 mr-1" />
-                              <span>Utile</span>
-                            </Button>
-                          </div>
-                        </div>
+                
+                {user ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Votre note :</span>
+                      <div className="flex">
+                        {Array(5)
+                          .fill(0)
+                          .map((_, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => handleRating(i + 1)}
+                              onMouseEnter={() => setHoverRating(i + 1)}
+                              onMouseLeave={() => setHoverRating(0)}
+                              disabled={ratingLoading}
+                              className="p-1"
+                            >
+                              <Star
+                                className={`h-6 w-6 transition-colors ${
+                                  i < (hoverRating || userRating)
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300 hover:text-yellow-400"
+                                }`}
+                              />
+                            </button>
+                          ))}
                       </div>
+                      {ratingLoading && <span className="text-sm text-muted-foreground">Envoi en cours...</span>}
                     </div>
-                  ))}
-                </div>
+                    <p className="text-sm text-muted-foreground">
+                      Cliquez sur les étoiles pour noter ce prestataire de 1 à 5 étoiles.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">Connectez-vous pour noter ce prestataire</p>
+                    <Button className="bg-green-500 hover:bg-green-600">
+                      Se connecter
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>
 
-          {/* Booking Sidebar */}
+          {/* Reservation Sidebar */}
           <div className="md:w-1/3">
             <div className="sticky top-24">
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-xl font-bold mb-4">Réserver un service</h2>
                   <div className="mb-4 pb-4 border-b">
-                    <div className="font-bold text-2xl mb-1">{provider.price}</div>
-                    <div className="text-muted-foreground">Prix de base par heure</div>
+                    <div className="font-bold text-2xl mb-1">Tarif sur devis</div>
+                    <div className="text-muted-foreground">Contactez le prestataire pour un devis personnalisé</div>
                   </div>
 
                   <div className="space-y-4 mb-6">
                     <div>
                       <label className="block text-sm font-medium mb-1">Date</label>
-                      <select className="w-full p-2 border rounded-md">
-                        <option>Aujourd'hui</option>
-                        <option>Demain</option>
-                        <option>Après-demain</option>
-                        <option>Choisir une autre date</option>
-                      </select>
+                      <input 
+                        type="date" 
+                        className="w-full p-2 border rounded-md"
+                        value={reservationData.date}
+                        onChange={(e) => setReservationData(prev => ({ ...prev, date: e.target.value }))}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Heure</label>
-                      <select className="w-full p-2 border rounded-md">
-                        <option>09:00</option>
-                        <option>10:00</option>
-                        <option>11:00</option>
-                        <option>12:00</option>
-                        <option>14:00</option>
-                        <option>15:00</option>
-                        <option>16:00</option>
-                        <option>17:00</option>
+                      <select 
+                        className="w-full p-2 border rounded-md"
+                        value={reservationData.heure}
+                        onChange={(e) => setReservationData(prev => ({ ...prev, heure: e.target.value }))}
+                      >
+                        <option value="">Sélectionner une heure</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
                       </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Type de service</label>
-                      <select className="w-full p-2 border rounded-md">
-                        <option>Réparation de fuite</option>
-                        <option>Installation de robinetterie</option>
-                        <option>Débouchage de canalisation</option>
-                        <option>Installation de chauffe-eau</option>
+                      <select 
+                        className="w-full p-2 border rounded-md"
+                        value={reservationData.typeService}
+                        onChange={(e) => setReservationData(prev => ({ ...prev, typeService: e.target.value }))}
+                      >
+                        <option value="">Sélectionner un service</option>
+                        {/* Services basés sur les spécialités du prestataire */}
+                        {provider.specialites?.map((specialite) => (
+                          <option key={specialite.id} value={specialite.nom}>
+                            {specialite.nom}
+                          </option>
+                        ))}
+                        {/* Services génériques disponibles */}
+                        <option value="ELECTRICIEN">Électricien</option>
+                        <option value="PLOMBIER">Plombier</option>
+                        <option value="MACON">Maçon</option>
+                        <option value="JARDINIER">Jardinier</option>
+                        <option value="PEINTRE">Peintre</option>
+                        <option value="MENUISIER">Menuisier</option>
+                        <option value="CLIMATICIEN">Climaticien</option>
                       </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Description (optionnel)</label>
+                      <textarea 
+                        className="w-full p-2 border rounded-md"
+                        rows={3}
+                        placeholder="Décrivez votre besoin..."
+                        value={reservationData.description}
+                        onChange={(e) => setReservationData(prev => ({ ...prev, description: e.target.value }))}
+                      />
                     </div>
                   </div>
 
-                  <Button className="w-full bg-green-500 hover:bg-green-600 mb-4">Réserver maintenant</Button>
+                  <Button 
+                    className="w-full bg-green-500 hover:bg-green-600 mb-4"
+                    onClick={handleReservation}
+                    disabled={reservationLoading}
+                  >
+                    {reservationLoading ? "Création en cours..." : "Réserver maintenant"}
+                  </Button>
 
                   <Button variant="outline" className="w-full flex items-center justify-center gap-2">
                     <MessageCircle className="h-4 w-4" />

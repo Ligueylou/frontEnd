@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { Search, MapPin, Star, Clock, Shield, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -7,94 +9,39 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useEffect, useState } from "react"
+import { apiService, type Prestataire } from "../lib/api"
 
 export default function ProvidersPage() {
-  const providers = [
-    {
-      id: 1,
-      name: "Amadou Diallo",
-      service: "Plomberie",
-      rating: 4.8,
-      reviews: 56,
-      image: "/placeholder.svg?height=80&width=80",
-      location: "Dakar Centre",
-      available: "Aujourd'hui",
-      verified: true,
-      experience: "10 ans",
-      completedJobs: 124,
-      specialties: ["Réparation fuites", "Installation", "Dépannage urgence"],
-    },
-    {
-      id: 2,
-      name: "Fatou Sow",
-      service: "Ménage",
-      rating: 4.9,
-      reviews: 124,
-      image: "/placeholder.svg?height=80&width=80",
-      location: "Plateau",
-      available: "Demain",
-      verified: true,
-      experience: "7 ans",
-      completedJobs: 89,
-      specialties: ["Nettoyage professionnel", "Repassage", "Entretien"],
-    },
-    {
-      id: 3,
-      name: "Ousmane Ndiaye",
-      service: "Électricité",
-      rating: 4.7,
-      reviews: 89,
-      image: "/placeholder.svg?height=80&width=80",
-      location: "Almadies",
-      available: "Aujourd'hui",
-      verified: true,
-      experience: "12 ans",
-      completedJobs: 156,
-      specialties: ["Installation électrique", "Dépannage", "Mise aux normes"],
-    },
-    {
-      id: 4,
-      name: "Aïda Mbaye",
-      service: "Cuisine",
-      rating: 4.9,
-      reviews: 76,
-      image: "/placeholder.svg?height=80&width=80",
-      location: "Mermoz",
-      available: "Ce weekend",
-      verified: true,
-      experience: "8 ans",
-      completedJobs: 67,
-      specialties: ["Cuisine sénégalaise", "Pâtisserie", "Événements"],
-    },
-    {
-      id: 5,
-      name: "Ibrahima Gueye",
-      service: "Bricolage",
-      rating: 4.6,
-      reviews: 42,
-      image: "/placeholder.svg?height=80&width=80",
-      location: "Parcelles",
-      available: "Aujourd'hui",
-      verified: true,
-      experience: "6 ans",
-      completedJobs: 78,
-      specialties: ["Montage meubles", "Réparations", "Peinture"],
-    },
-    {
-      id: 6,
-      name: "Mariama Diop",
-      service: "Jardinage",
-      rating: 4.8,
-      reviews: 31,
-      image: "/placeholder.svg?height=80&width=80",
-      location: "Yoff",
-      available: "Demain",
-      verified: true,
-      experience: "9 ans",
-      completedJobs: 45,
-      specialties: ["Entretien jardins", "Plantation", "Taille"],
-    },
-  ]
+  const [providers, setProviders] = useState<Prestataire[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      setLoading(true)
+      try {
+        const response = await apiService.getAllPrestataires()
+        if (response.success && Array.isArray(response.data)) {
+          setProviders(response.data.filter((p) => p.actif))
+        } else {
+          setProviders([])
+        }
+      } catch (e) {
+        setProviders([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProviders()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <span>Chargement des prestataires...</span>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -313,33 +260,28 @@ export default function ProvidersPage() {
                     <div className="flex gap-4">
                       <div className="relative">
                         <Avatar className="h-20 w-20">
-                          <AvatarImage src={provider.image || "/placeholder.svg"} alt={provider.name} />
+                          <AvatarImage src={"/placeholder.svg"} alt={provider.nomComplet} />
                           <AvatarFallback className="text-lg">
-                            {provider.name
+                            {provider.nomComplet
                               .split(" ")
                               .map((n) => n[0])
                               .join("")}
                           </AvatarFallback>
                         </Avatar>
-                        {provider.verified && (
-                          <div className="absolute -bottom-1 -right-1 bg-green-500 text-white p-1 rounded-full">
-                            <Shield className="h-3 w-3" />
-                          </div>
-                        )}
                       </div>
 
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="font-bold text-lg">{provider.name}</h3>
-                            <p className="text-green-600 font-medium">{provider.service}</p>
+                            <h3 className="font-bold text-lg">{provider.nomComplet}</h3>
+                            <p className="text-green-600 font-medium">{provider.specialites?.[0]?.nom || "-"}</p>
                             <div className="flex items-center gap-2 mt-1">
                               <MapPin className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm text-muted-foreground">{provider.location}</span>
+                              <span className="text-sm text-muted-foreground">{provider.adresse?.ville || "-"}</span>
                             </div>
                           </div>
                           <Badge variant="outline" className="text-green-600">
-                            {provider.experience}
+                            Score: {provider.score ?? "-"}
                           </Badge>
                         </div>
 
@@ -350,36 +292,22 @@ export default function ProvidersPage() {
                               .map((_, i) => (
                                 <Star
                                   key={i}
-                                  className={`h-4 w-4 ${i < Math.floor(provider.rating) ? "fill-green-400 text-green-400" : "text-gray-300"}`}
+                                  className={`h-4 w-4 ${i < Math.round(provider.score ?? 0) ? "fill-green-400 text-green-400" : "text-gray-300"}`}
                                 />
                               ))}
                           </div>
-                          <span className="ml-1 text-sm font-medium">{provider.rating}</span>
-                          <span className="ml-1 text-sm text-muted-foreground">({provider.reviews} avis)</span>
-                        </div>
-
-                        <div className="flex items-center gap-4 mt-2">
-                          <div className="flex items-center">
-                            <Users className="h-4 w-4 text-muted-foreground mr-1" />
-                            <span className="text-sm text-muted-foreground">{provider.completedJobs} services</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 text-green-500 mr-1" />
-                            <span className="text-sm text-green-600">
-                              Disponible {provider.available.toLowerCase()}
-                            </span>
-                          </div>
+                          <span className="ml-1 text-sm font-medium">{provider.score ?? "-"}</span>
                         </div>
 
                         <div className="flex flex-wrap gap-1 mt-3">
-                          {provider.specialties.slice(0, 2).map((specialty, index) => (
+                          {provider.specialites?.slice(0, 2).map((specialite, index) => (
                             <Badge key={index} variant="secondary" className="text-xs">
-                              {specialty}
+                              {specialite.nom}
                             </Badge>
                           ))}
-                          {provider.specialties.length > 2 && (
+                          {provider.specialites && provider.specialites.length > 2 && (
                             <Badge variant="secondary" className="text-xs">
-                              +{provider.specialties.length - 2}
+                              +{provider.specialites.length - 2}
                             </Badge>
                           )}
                         </div>

@@ -11,12 +11,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "../contexts/auth-context"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export default function LoginPage() {
-  const { login } = useAuth()
+  const { login, user, isAuthenticated } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -26,6 +26,12 @@ export default function LoginPage() {
     phone: "",
     remember: false,
   })
+
+  useEffect(() => {
+    if (isAuthenticated && user && user.role === "ADMIN") {
+      router.replace("/admin")
+    }
+  }, [isAuthenticated, user, router])
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -213,6 +219,11 @@ export default function LoginPage() {
                 Vous n&apos;avez pas de compte?{" "}
                 <Link href="/register" className="text-green-600 hover:text-green-700 font-medium">
                   S&apos;inscrire
+                </Link>
+              </div>
+              <div className="text-center text-sm">
+                <Link href="/admin/login" className="text-red-600 hover:text-red-700 font-medium">
+                  Accès administrateur
                 </Link>
               </div>
             </CardFooter>

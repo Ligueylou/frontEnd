@@ -1,10 +1,66 @@
+"use client"
+
 import Link from "next/link"
-import { Search, MapPin, Star, Shield, CreditCard } from "lucide-react"
+import { Search, MapPin, Star, Shield, CreditCard, UserIcon, LogOut, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useState, useEffect } from "react"
+
+interface UserData {
+  id: number
+  email: string
+  nomComplet: string
+  role: string
+}
 
 export default function HomePage() {
+  const [user, setUser] = useState<UserData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fonction pour obtenir les initiales
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  // Vérifier si l'utilisateur est connecté au chargement
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem("token")
+      const userData = localStorage.getItem("user")
+
+      if (token && userData) {
+        try {
+          const parsedUser = JSON.parse(userData)
+          setUser(parsedUser)
+        } catch (error) {
+          console.error("Erreur lors du parsing des données utilisateur:", error)
+          localStorage.removeItem("token")
+          localStorage.removeItem("user")
+        }
+      }
+      setIsLoading(false)
+    }
+
+    checkAuthStatus()
+  }, [])
+
+  // Fonction de déconnexion
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    setUser(null)
+    // Rediriger vers la page d'accueil ou de connexion
+    window.location.href = "/"
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
@@ -28,13 +84,59 @@ export default function HomePage() {
               Comment ça marche
             </Link>
           </nav>
+
+          {/* Section d'authentification */}
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">Se connecter</Link>
-            </Button>
-            <Button size="sm" className="bg-green-500 hover:bg-green-600" asChild>
-              <Link href="/register">S&apos;inscrire</Link>
-            </Button>
+            {isLoading ? (
+              <div className="flex items-center gap-4">
+                <div className="h-8 w-20 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-8 w-20 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            ) : user ? (
+              // Menu utilisateur connecté
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2 p-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-green-500 text-white text-sm font-medium">
+                        {getInitials(user.nomComplet)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-3 py-2 border-b">
+                    <p className="text-sm font-medium">{user.nomComplet}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                    <p className="text-xs text-green-600 capitalize">{user.role.toLowerCase()}</p>
+                  </div>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center gap-2">
+                      <UserIcon className="h-4 w-4" />
+                      Mon profil
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-red-600 focus:text-red-600"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Se déconnecter
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              // Boutons de connexion/inscription pour utilisateurs non connectés
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/login">Se connecter</Link>
+                </Button>
+                <Button size="sm" className="bg-green-500 hover:bg-green-600" asChild>
+                  <Link href="/register">S&apos;inscrire</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -140,7 +242,7 @@ export default function HomePage() {
                 title: "Recherchez",
                 description:
                   "Trouvez le service dont vous avez besoin en fonction de votre localisation et de votre budget.",
-                image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=200&fit=crop",
+                image: "https://images.unsplash.com/photo-1560472049-0cfed4f6a45d?w=300&h=200&fit=crop",
               },
               {
                 icon: <Star className="h-10 w-10 text-green-500" />,

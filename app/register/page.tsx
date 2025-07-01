@@ -11,12 +11,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "../contexts/auth-context"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
 export default function RegisterPage() {
-  const { register } = useAuth()
+  const { register, user, isAuthenticated } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -40,6 +40,12 @@ export default function RegisterPage() {
     confirmPassword: "",
     acceptTerms: false,
   })
+
+  useEffect(() => {
+    if (isAuthenticated && user && user.role === "ADMIN") {
+      router.replace("/admin")
+    }
+  }, [isAuthenticated, user, router])
 
   const validateForm = (form: typeof clientForm | typeof providerForm) => {
     if (!form.nomComplet.trim()) {
